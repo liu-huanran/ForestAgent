@@ -1,0 +1,58 @@
+# Direct geometry baseline parameters for q1_dbh, q2_height, and q3_crown_width.
+
+ground_reference_percentile: 1.0
+
+dbh:
+  breast_height_m: 1.3
+  slice_thickness_m: 0.08
+  min_slice_points: 20
+  circle_fitting_method: "kasa"
+  radial_outlier_mad_threshold: 3.0
+  min_radius_m: 0.01
+  max_radius_m: 1.0
+  trunk_filtering:
+    enabled: true
+    xy_cluster_radius_m: 0.025
+    min_cluster_points: 20
+    min_angular_coverage: 0.7
+    cluster_selection_metric: "coverage_over_radius"
+    radial_trim_mad_threshold: null
+    secondary_review:
+      enabled: true
+      min_angular_coverage: 0.55
+      max_fit_rmse_m: 0.03
+      max_radius_ratio_vs_primary: 0.4
+      min_score_ratio_vs_primary: 2.0
+    suspicion:
+      large_point_count_threshold: 180
+      spread_to_diameter_ratio_threshold: 1.35
+      large_candidate_radius_m: 0.1
+      min_large_candidate_count: 2
+
+height:
+  top_percentile: 99.5
+  min_point_count: 50
+  top_support_window_m: 0.25
+  top_outlier_gap_threshold_m: 0.75
+  sparse_top_min_point_count: 12
+  sparse_top_min_fraction: 0.002
+  truncated_top_span_threshold_m: 0.05
+  truncated_top_plateau_tolerance_m: 0.01
+  truncated_top_plateau_ratio_threshold: 0.6
+  ground_stability_band_m: 0.2
+  ground_stability_max_iqr_m: 0.08
+
+crown_width:
+  robust_low_percentile: 0.5
+  robust_high_percentile: 99.5
+  min_projected_points: 50
+  radial_outlier_mad_threshold: 4.0
+  sparse_projection_min_unique_points: 30
+  heavy_outlier_removal_fraction_threshold: 0.15
+  axis_pca_gap_threshold_m: 0.75
+  elongation_ratio_threshold: 2.5
+  robust_shrinkage_ratio_threshold: 0.35
+  pca_axis_underestimate_threshold_m: 0.1
+  edge_support_band_m: 0.05
+  edge_support_min_point_count: 20
+  edge_support_min_fraction: 0.005

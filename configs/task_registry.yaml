@@ -1,0 +1,63 @@
+q1_dbh:
+  task_name: "胸径是多少"
+  output_type: "scalar"
+  required_tools:
+    - "estimate_dbh"
+  description: "Return the estimated DBH as a scalar result."
+
+q2_height:
+  task_name: "树高是多少"
+  output_type: "scalar"
+  required_tools:
+    - "estimate_height"
+  description: "Return the estimated tree height as a scalar result."
+
+q3_crown_width:
+  task_name: "冠幅是多少"
+  output_type: "scalar"
+  required_tools:
+    - "estimate_crown_width"
+  description: "Return the estimated crown width as a scalar result."
+
+q4_tilt:
+  task_name: "是否明显倾斜"
+  output_type: "label_with_value"
+  required_tools:
+    - "estimate_tilt"
+  description: "Convert the tilt estimate into a labeled result with numeric support."
+
+q5_quality:
+  task_name: "点云是否可靠"
+  output_type: "quality_label"
+  required_tools:
+    - "assess_quality"
+  description: "Return a quality label for the input point cloud."
+
+q6_form:
+  task_name: "偏细高还是矮壮"
+  output_type: "json_summary"
+  required_tools:
+    - "estimate_dbh"
+    - "estimate_height"
+  description: "Summarize the tree form from DBH and height."
+
+q7_fall_risk:
+  task_name: "是否有初步倒伏风险"
+  output_type: "json_summary"
+  required_tools:
+    - "estimate_tilt"
+    - "estimate_dbh"
+    - "estimate_height"
+    - "assess_quality"
+  description: "Summarize preliminary fall risk from geometry and quality signals."
+
+q8_brief_report:
+  task_name: "生成简短单木报告"
+  output_type: "report_text"
+  required_tools:
+    - "estimate_dbh"
+    - "estimate_height"
+    - "estimate_crown_width"
+    - "estimate_tilt"
+    - "assess_quality"
+  description: "Generate a short structured single-tree report."

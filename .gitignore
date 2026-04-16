@@ -1,0 +1,35 @@
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+.mypy_cache/
+
+# Env
+.venv/
+venv/
+.env
+.env.*
+!.env.example
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Large artifacts / model weights / caches
+data/
+checkpoints/
+weights/
+artifacts/
+outputs/
+cache/
+*.pt
+*.pth
+*.ckpt
+*.onnx

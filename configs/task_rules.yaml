@@ -1,0 +1,65 @@
+thresholds:
+  q4_tilt:
+    obvious_tilt_deg: 12.0
+
+  q5_quality:
+    high_confidence_min: 0.85
+    medium_confidence_min: 0.60
+
+  q6_form:
+    slender_ratio_tall_min: 70.0
+    slender_ratio_stout_max: 45.0
+
+  q7_fall_risk:
+    high_tilt_deg_min: 15.0
+    moderate_tilt_deg_min: 8.0
+    high_slender_ratio_min: 75.0
+    moderate_slender_ratio_min: 60.0
+    small_dbh_cm_max: 20.0
+    low_quality_confidence_max: 0.60
+
+labels:
+  q4_tilt:
+    obvious_tilt:
+      label: "明显倾斜"
+      message: "倾斜角达到明显倾斜阈值。"
+    no_obvious_tilt:
+      label: "无明显倾斜"
+      message: "倾斜角未达到明显倾斜阈值。"
+
+  q5_quality:
+    high:
+      label: "高"
+      message: "点云覆盖较完整，估计结果相对可靠。"
+    medium:
+      label: "中"
+      message: "点云质量可用，但部分结论需要谨慎解读。"
+    low:
+      label: "低"
+      message: "点云质量偏低，建议谨慎使用后续分析结果。"
+
+  q6_form:
+    slender:
+      label: "偏细高"
+      message: "树高相对胸径偏大，整体形态更接近细高型。"
+    stout:
+      label: "矮壮"
+      message: "胸径相对树高偏大，整体形态更接近矮壮型。"
+    balanced:
+      label: "中等"
+      message: "树高与胸径比例处于中间区间。"
+
+  q7_fall_risk:
+    high:
+      label: "高"
+      message: "倾斜与形态信号共同提示较高的初步倒伏风险。"
+    medium:
+      label: "中"
+      message: "存在一定倒伏风险信号，建议结合现场信息进一步确认。"
+    low:
+      label: "低"
+      message: "当前几何信号未提示明显倒伏风险。"
+    uncertain:
+      label: "不确定"
+      message: "由于点云质量或输入条件受限，当前风险判断不稳定。"
+

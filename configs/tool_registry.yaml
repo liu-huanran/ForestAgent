@@ -1,0 +1,29 @@
+estimate_dbh:
+  description: "Estimate diameter at breast height from a single-tree point cloud."
+  unit: "cm"
+  value_semantics: "diameter_at_breast_height"
+  numeric_output: true
+
+estimate_height:
+  description: "Estimate total tree height from a single-tree point cloud."
+  unit: "m"
+  value_semantics: "tree_height"
+  numeric_output: true
+
+estimate_crown_width:
+  description: "Estimate crown width from a single-tree point cloud."
+  unit: "m"
+  value_semantics: "crown_width"
+  numeric_output: true
+
+estimate_tilt:
+  description: "Estimate trunk tilt angle and expose it for downstream tilt labeling."
+  unit: "deg"
+  value_semantics: "tilt_angle"
+  numeric_output: true
+
+assess_quality:
+  description: "Assess whether the point cloud is reliable enough for interpretation."
+  unit: null
+  value_semantics: "quality_label"
+  numeric_output: false
