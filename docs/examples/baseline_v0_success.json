@@ -1,0 +1,81 @@
+{
+  "request": {
+    "task_id": "tree_report_q123",
+    "question": null,
+    "resolved_intent": "tree_report_q123"
+  },
+  "input": {
+    "path": "synthetic_tree.las",
+    "format": "las"
+  },
+  "tool_results": {
+    "estimate_dbh": {
+      "tool_name": "estimate_dbh",
+      "status": "success",
+      "value": 24.174802018456717,
+      "unit": "cm",
+      "confidence": null,
+      "extra": {
+        "backend": "direct_geometry",
+        "input_format": "las",
+        "config_path": "configs/direct_geometry.yaml",
+        "trunk_only_filtering_enabled": true
+      },
+      "message": "Direct geometry DBH estimated from breast-height slice circle fitting."
+    },
+    "estimate_height": {
+      "tool_name": "estimate_height",
+      "status": "success",
+      "value": 8.0,
+      "unit": "m",
+      "confidence": null,
+      "extra": {
+        "backend": "direct_geometry",
+        "input_format": "las",
+        "config_path": "configs/direct_geometry.yaml",
+        "top_percentile": 99.5
+      },
+      "message": "Direct geometry height estimated from top support minus ground support reference."
+    },
+    "estimate_crown_width": {
+      "tool_name": "estimate_crown_width",
+      "status": "success",
+      "value": 3.4530999999999996,
+      "unit": "m",
+      "confidence": null,
+      "extra": {
+        "backend": "direct_geometry",
+        "input_format": "las",
+        "config_path": "configs/direct_geometry.yaml",
+        "estimation_method": "fixed_axis_robust_span_mean"
+      },
+      "message": "Direct geometry crown width estimated from fixed-axis robust XY spans."
+    }
+  },
+  "json_summary": {
+    "dbh_cm": {
+      "value": 24.174802018456717,
+      "unit": "cm",
+      "confidence": null,
+      "status": "success",
+      "message": "Direct geometry DBH estimated from breast-height slice circle fitting."
+    },
+    "height_m": {
+      "value": 8.0,
+      "unit": "m",
+      "confidence": null,
+      "status": "success",
+      "message": "Direct geometry height estimated from top support minus ground support reference."
+    },
+    "crown_width_m": {
+      "value": 3.4530999999999996,
+      "unit": "m",
+      "confidence": null,
+      "status": "success",
+      "message": "Direct geometry crown width estimated from fixed-axis robust XY spans."
+    }
+  },
+  "report_text": "该单木估计胸径为 24.17 cm，树高为 8.00 m，冠幅为 3.45 m。以上结果均来自 direct geometry baseline；本版未进行倾斜、质量、形态或风险判断。",
+  "status": "success",
+  "message": "q1/q2/q3 单木分析完成，简短报告已生成。"
+}
