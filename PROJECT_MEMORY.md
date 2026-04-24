@@ -1,0 +1,442 @@
+# PROJECT MEMORY
+
+This file is the living project memory for this repository.
+It records the current verified project state, confirmed decisions, open uncertainties, and immediate next actions.
+
+When conflicts arise between this file and the current codebase, treat the current verified working code as ground truth, report the conflict explicitly, and then update this file.
+
+---
+
+## 1. Confirmed Current State
+
+### 1.0 Latest verified project status
+
+As of the latest verified project state:
+
+- **q1 / q2 / q3 baseline v1.1 is frozen**
+- **single-tree MVP v1 is connected to a local Ollama verbalizer**
+- the next development stage moves to a **Uni3D extractor / feature branch**
+
+The local Ollama verbalizer is a controlled wording layer.
+It must not be treated as the source of physical measurements or free-form reasoning.
+
+The next Uni3D branch should start as an independent feature-extraction branch, not as a direct integration into the main QA path.
+
+### 1.1 Current confirmed baseline state
+The current system has already run through the full single-tree MVP process:
+
+`question -> fixed process -> answer`
+
+The q1 / q2 / q3 baseline v1.1 is now frozen as the current geometry-grounded reference path.
+
+- the current baseline path is **fixed / deterministic**
+- it does **not** currently rely on learned 3D features
+- physical measurements still come from structured geometry/tool outputs
+- the local Ollama verbalizer is only a verbalization layer over structured results
+
+This is extremely important:
+**Baseline v1.1 is the frozen q1/q2/q3 reference path, even though single-tree MVP v1 now has a local verbalizer.**
+Do not silently reinterpret the verbalizer as a reasoning or measurement engine.
+
+### 1.2 Current stable problem scope
+The currently stable scope is centered on **single-tree tasks**, especially:
+
+- **q1**: DBH
+- **q2**: Height
+- **q3**: Crown Width
+
+These are currently the main baseline-supported tasks.
+
+### 1.3 Current baseline nature
+The current baseline should be understood as:
+
+- a working end-to-end system
+- deterministic routing / fixed logic
+- geometry-centered
+- structured enough to be frozen as a baseline
+- suitable for later comparison against feature-augmented or LLM-augmented variants
+
+### 1.4 Important correction to older memory
+Older memory treated Ollama-style verbalization as only a future idea.
+The verified current state is now:
+
+- single-tree MVP v1 has a local Ollama verbalizer connected
+- q1 / q2 / q3 baseline v1.1 remains frozen and geometry-grounded
+- the verbalizer must stay downstream of structured results
+
+Baseline v1.1 should currently be treated as:
+- fixed for q1 / q2 / q3
+- deterministic for measurement logic
+- pre-Uni3D / pre-learned-feature
+- paired with a controlled local verbalization layer in single-tree MVP v1
+
+---
+
+## 2. What Baseline v1.1 Means
+
+Baseline v1.1 is the current frozen q1 / q2 / q3 reference system.
+
+Its purpose is:
+
+- to preserve the currently working path
+- to provide a reproducible comparison point
+- to prevent future changes from blurring what the original system actually did
+
+Baseline v1.1 should answer these questions clearly:
+
+1. What is the actual entrypoint?
+2. What files are on the real working path?
+3. What inputs does it take?
+4. What outputs does it produce?
+5. What tasks does it currently support?
+6. What is explicitly **out of scope**?
+
+---
+
+## 3. Current Main Development Direction
+
+### 3.1 Immediate main direction
+The current main direction is:
+
+1. **Keep q1 / q2 / q3 baseline v1.1 frozen**
+2. Keep **single-tree MVP v1 with local Ollama verbalizer** as the current MVP state
+3. Move next development to **Stage 2: Uni3D as an independent feature extractor**
+
+### 3.2 Why Uni3D is next
+The project currently has a functioning fixed pipeline, but it still lacks a real **learned semantic representation layer**.
+
+The next important step is **not** to immediately expand more tasks or add free-form LLM reasoning.
+
+The next important step is to introduce a learned 3D representation in a controlled way:
+
+`point cloud -> preprocess -> Uni3D -> global embedding -> cache -> downstream use`
+
+### 3.3 What Uni3D should mean at this stage
+At this stage, Uni3D should be treated as:
+
+- a **frozen representation module**
+- an **independent feature extractor**
+- not part of free-form generation
+- not a replacement for geometry tools
+- not a justification to change q1/q2/q3 measurement logic
+
+The target is to first obtain a stable, reusable global embedding pipeline.
+
+---
+
+## 4. Stage 2 Plan: Uni3D
+
+### 4.1 Correct interpretation of Stage 2
+Stage 2 is **not** “learn all LLM knowledge first”.
+
+Stage 2 is:
+
+**turn Uni3D into a frozen, independent, cached feature extractor**
+
+### 4.2 Minimal technical target
+The minimal target is:
+
+- input: single-tree point cloud
+- preprocessing: fixed and documented
+- model: Uni3D loaded in eval mode
+- output: global embedding
+- storage: cacheable feature artifact
+- usage: independent of the main question-answer pipeline
+
+### 4.3 What must be clarified before full implementation
+Before implementing the extractor, the following must be confirmed from the official Uni3D repo:
+
+1. where the model is built
+2. how checkpoints are loaded
+3. what the real inference path is
+4. what input preprocessing is expected
+5. which output tensor is the best candidate for **global embedding**
+6. whether the embedding is normalized or needs post-processing
+
+### 4.4 Recommended order
+The current recommended order is:
+
+1. minimal reading of Uni3D paper + repo
+2. technical reconnaissance of official implementation
+3. confirm builder / checkpoint / forward / output
+4. implement independent extractor
+5. run sanity checks
+6. only then decide downstream use
+
+---
+
+## 5. Known Uncertainties
+
+The following are currently not fully settled:
+
+1. exact q4/q5 definition and feasibility
+2. exact Uni3D builder/checkpoint/forward path in the official codebase
+3. exact preprocessing details needed to match official inference behavior
+4. which downstream task should first consume Uni3D features after extraction
+5. how the local Ollama verbalizer should be documented and bounded relative to structured outputs
+
+These uncertainties should not be hidden.
+They should be tracked and resolved one by one.
+
+---
+
+## 6. Immediate Next Actions
+
+The current immediate next actions are:
+
+1. preserve frozen q1 / q2 / q3 baseline v1.1
+2. preserve single-tree MVP v1 local Ollama verbalizer boundaries
+3. create a Uni3D extractor / feature branch from `main`
+4. inspect Uni3D official repo
+5. identify:
+   - model builder
+   - checkpoint loading
+   - inference path
+   - output tensor for global embedding
+6. implement a standalone Uni3D feature extractor
+7. run minimal sanity checks
+8. only then decide how to use the features downstream
+
+---
+
+## 7.  Stage Roadmap
+
+### Current overall stage
+
+The project has completed problem scoping and is currently at:
+
+**Stage 1 complete for q1 / q2 / q3 baseline v1.1 -> entering Stage 2 (Uni3D independent feature extractor)**
+
+This means:
+
+- q1 / q2 / q3 baseline v1.1 is frozen
+- single-tree MVP v1 is connected to a local Ollama verbalizer
+- the next major step is not immediate q4/q5 expansion or free-form LLM integration
+- the next major step is to introduce a learned 3D representation branch in a controlled way
+
+------
+
+### Stage 0 — Problem Scoping and Boundary Definition
+
+**Goal:**
+Define a research problem that is small enough to execute, clear enough to explain, and structured enough to evaluate.
+
+**What this stage should accomplish:**
+
+- restrict the task to single-tree point cloud understanding
+- identify the current stable core tasks (q1/q2/q3)
+- clarify what is in scope and what is out of scope
+- reject open-ended LLM-only reasoning as the current main path
+- establish the principle of geometry grounding first
+
+**Expected outputs:**
+
+- a clear problem statement
+- a reduced and workable project scope
+- explicit non-goals
+- an initial research narrative
+
+**Current status:**
+This stage is considered largely complete.
+
+------
+
+### Stage 1 - Baseline v1.1 Freeze
+
+**Goal:**
+Freeze the currently working fixed pipeline into a reproducible and clearly documented baseline.
+
+**What this stage should accomplish:**
+
+- identify the real baseline entrypoint and actual working path
+- define what baseline v1.1 does and does not include
+- preserve the current behavior as the reference system
+- provide a clean way to run and verify the baseline
+- document the baseline clearly for future comparison
+
+**Expected outputs:**
+
+- Baseline v1.1 documentation
+- clear entrypoint / run path
+- minimal runnable example or smoke test
+- stable description of supported tasks and outputs
+
+**Current status:**
+This stage is complete for q1 / q2 / q3 baseline v1.1.
+Single-tree MVP v1 now includes a local Ollama verbalizer as a downstream wording layer.
+
+------
+
+### Stage 2 — Uni3D as an Independent Feature Extractor
+
+**Goal:**
+Turn Uni3D into a frozen, standalone, cacheable feature extractor before integrating it into the main system.
+
+**What this stage should accomplish:**
+
+- inspect the official Uni3D repo
+- identify builder / checkpoint loading / inference path / output tensor
+- confirm which output should be used as global embedding
+- implement a standalone extractor
+- add cache support
+- run minimal sanity checks
+
+**Important constraints:**
+
+- do not integrate Uni3D directly into the main QA pipeline yet
+- do not replace q1/q2/q3 geometry tools
+- do not immediately connect Uni3D to LLM generation
+- do not expand q4/q5 in parallel
+
+**Expected outputs:**
+
+- Uni3D reconnaissance report
+- standalone feature extractor
+- cache mechanism
+- sanity check results
+
+**Current status:**
+This is the next main stage.
+
+------
+
+### Stage 3 — Minimal Method Integration
+
+**Goal:**
+Integrate geometry grounding and Uni3D representation into a minimal method version of the system.
+
+**What this stage should accomplish:**
+
+- define the role of Uni3D features inside the method
+- define how geometry signals and learned features complement each other
+- produce a minimal integrated method pipeline
+- clarify the system’s structured intermediate representation
+
+**Expected outputs:**
+
+- method structure diagram
+- minimal integrated pipeline
+- explicit module-role definition
+
+**Exit condition:**
+The method must be clearly explainable: what is added beyond the baseline, why it is added, and what role it plays.
+
+------
+
+### Stage 4 — Experiments and Ablations
+
+**Goal:**
+Demonstrate that the proposed method is useful, not just implemented.
+
+**What this stage should accomplish:**
+
+- compare baseline v1.1 vs method-enhanced version
+- run ablations on geometry / Uni3D / combined settings
+- evaluate stability and difficult cases
+- analyze failure cases
+
+**Expected outputs:**
+
+- main result tables
+- ablation tables
+- stability observations
+- failure case analysis
+
+**Exit condition:**
+It should be possible to answer:
+
+- what improved
+- why it improved
+- where it did not improve
+- what the method boundary is
+
+------
+
+### Stage 5 — Paper Writing and Presentation
+
+**Goal:**
+Turn the implemented system and experimental findings into a coherent small paper.
+
+**What this stage should accomplish:**
+
+- write the problem, method, experiments, and conclusions clearly
+- produce figures, tables, and method diagrams
+- refine contribution statements
+- prepare for report / defense / presentation
+
+**Expected outputs:**
+
+- paper draft
+- figure/table set
+- presentation outline
+- contribution summary
+
+------
+
+### Current stage focus
+
+The current focus should remain:
+
+1. preserve q1 / q2 / q3 baseline v1.1
+2. preserve single-tree MVP v1 verbalizer boundaries
+3. inspect the official Uni3D implementation
+4. confirm the real feature extraction path
+5. implement a standalone Uni3D extractor
+6. run minimal sanity checks
+
+------
+
+### Things that are explicitly not the current focus
+
+- not full q4/q5 expansion
+- not open-ended LLM reasoning
+- not large-scale architecture redesign
+- not feature-to-text generation directly
+- not learning “all LLM knowledge” before implementation
+
+------
+
+### Current success criterion
+
+At the current project stage, success means:
+
+- q1 / q2 / q3 baseline v1.1 is frozen and explainable
+- single-tree MVP v1 local Ollama verbalizer is bounded as a verbalization layer
+- Uni3D official implementation path is understood at the interface level
+- a standalone global feature extractor can be built next with confidence
+
+## 8. Short Status Summary
+
+If a future agent needs a short summary, use this:
+
+- ForestAgent is a single-tree point cloud research prototype.
+- q1/q2/q3 baseline v1.1 is frozen.
+- single-tree MVP v1 is connected to a local Ollama verbalizer.
+- The current system is still pre-Uni3D / pre-learned-feature.
+- q1/q2/q3 remain the currently stable core tasks.
+- The next main step is a Uni3D extractor / feature branch, not q4/q5 expansion.
+- Uni3D should first be used only for global feature extraction + cache + sanity checks.
+- Preserve geometry grounding and do not let any language layer invent physical facts.
+
+---
+
+## 9. Update Template For Future Tasks
+
+When a task changes the verified project state, update only the relevant parts of this file.
+Prefer incremental edits.
+
+Recommended update checklist:
+
+1. **Confirmed Current State**
+   - what is newly verified?
+   - what is still not implemented?
+
+2. **Current Main Development Direction**
+   - did the main next step change?
+
+3. **Known Uncertainties**
+   - which uncertainty was resolved?
+   - which new uncertainty appeared?
+
+4. **Immediate Next Actions**
+   - what should happen next, based on the latest verified state?
