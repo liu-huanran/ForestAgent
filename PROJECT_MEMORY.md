@@ -420,7 +420,60 @@ If a future agent needs a short summary, use this:
 
 ---
 
-## 9. Update Template For Future Tasks
+## 9. Server Profile v0.1
+
+This profile records the current target server environment for future Uni3D / feature-extraction work.
+
+### 9.1 Machine
+
+- Hostname: `teamlu-System-Product-Name`
+- User: `team-lu`
+- Home: `/home/team-lu`
+- Remote access: ToDesk desktop
+- SSH: unavailable for now
+
+### 9.2 OS
+
+- Ubuntu 22.04.5 LTS
+- Kernel: `6.8.0-64-generic`
+
+### 9.3 Hardware
+
+- RAM: 125 GiB
+- Disk: 1.9 TB total, 1.6 TB available on `/`
+- GPU: 2 x NVIDIA GeForce RTX 3090, 24 GB each
+
+### 9.4 NVIDIA / CUDA
+
+- NVIDIA Driver: `535.230.02`
+- `nvidia-smi` CUDA Version: 12.2
+- `nvcc` CUDA Toolkit: 11.8, V11.8.89
+
+### 9.5 Python / Conda
+
+- Conda path: `/home/team-lu/anaconda3/bin/conda`
+- Conda version: 24.11.3
+- Current env: `base`
+- base Python: 3.12.2
+- Recommendation: do not use `base` for ForestAgent; create a separate Python 3.10 environment
+
+### 9.6 Server workspace
+
+- Personal project root: `/home/team-lu/harrison_workspace`
+- Code: `~/harrison_workspace/projects`
+- Data: `~/harrison_workspace/data/forestagent`
+- Checkpoints: `~/harrison_workspace/checkpoints`
+- Runs: `~/harrison_workspace/runs/forestagent`
+- Logs: `~/harrison_workspace/logs/forestagent`
+- Outputs: `~/harrison_workspace/outputs/forestagent`
+- Use `tmux` for long-running jobs
+- Use `CUDA_VISIBLE_DEVICES=1` when targeting GPU 1
+- Back up code, configs, logs, metrics, and best checkpoints
+- Avoid downloading everything from the server; pull only the artifacts needed for review or recovery
+
+---
+
+## 10. Update Template For Future Tasks
 
 When a task changes the verified project state, update only the relevant parts of this file.
 Prefer incremental edits.
