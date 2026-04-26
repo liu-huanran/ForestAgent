@@ -163,6 +163,59 @@ The current recommended order is:
 5. run sanity checks
 6. only then decide downstream use
 
+### 4.5 Verified Uni3D extractor sanity check
+
+As of 2026-04-26, the Uni3D extractor passed a real GPU forward sanity check on the lab server.
+
+Verified details:
+
+- conda env: `fa-u`
+- checkpoint: `BAAI/Uni3D modelzoo/uni3d-b/model.pt`
+- `models.uni3d` import: ok
+- `pointnet2_ops` import: ok
+- ForestAgent import: ok
+- `mock=false`
+- `model_builder=create_uni3d`
+- input shape: `(10000, 3)`
+- feature shape: `[1, 10000, 6]`
+- embedding shape: `[1, 1024]`
+- `embedding_l2_normalized=true`
+- repeatability passed: `raw_max_abs_diff=0`, `l2_max_abs_diff=0`
+
+Boundary:
+
+- This verifies real Uni3D forward execution only.
+- It does not yet validate whether Uni3D features improve q1 / q2 / q3 measurement or report quality.
+- The current run used RGB `fallback_constant`, not real RGB.
+
+### 4.6 Uni3D small-batch sanity tooling
+
+As of 2026-04-26, the repository now includes offline tooling for the next Uni3D extractor sanity step:
+
+- `scripts/batch_extract_uni3d_embeddings.py`
+- `scripts/analyze_uni3d_embedding_similarity.py`
+- `scripts/convert_las_to_uni3d_npy.py`
+- `docs/uni3d_extractor_sanity_check.md`
+- `tests/test_uni3d_batch_scripts.py`
+- `tests/test_convert_las_to_uni3d_npy.py`
+
+Confirmed locally:
+
+- script CLI/help paths are available
+- `.npy` input loading for `[N, 3]` xyz and `[N, 6]` xyzrgb is covered by tests
+- invalid input shape rejection is covered by tests
+- similarity analysis over fake `.npz` embeddings is covered by tests
+- LAS-to-NPY helper logic for deterministic sampling, RGB normalization, `[N, 3]` / `[N, 6]` shape construction, and manifest writing is covered by tests
+- no local test uses mock results as real Uni3D output
+- no local test requires checkpoint, GPU, CUDA, `pointnet2_ops`, or real Uni3D forward
+
+Boundary:
+
+- real LAS reading with `laspy` over server `.las` files is not yet verified locally
+- real small-batch Uni3D forward over 5-10 trees is not yet verified
+- embedding cosine similarity over real Uni3D outputs is not yet verified
+- this tooling remains independent of the main QA system and q1 / q2 / q3 geometry baseline
+
 ---
 
 ## 5. Known Uncertainties
@@ -170,10 +223,12 @@ The current recommended order is:
 The following are currently not fully settled:
 
 1. exact q4/q5 definition and feasibility
-2. exact Uni3D builder/checkpoint/forward path in the official codebase
+2. whether Uni3D features improve q1/q2/q3 measurement or report quality
 3. exact preprocessing details needed to match official inference behavior
 4. which downstream task should first consume Uni3D features after extraction
 5. how the local Ollama verbalizer should be documented and bounded relative to structured outputs
+6. whether real Uni3D embeddings over 5-10 single-tree samples show useful separation in pairwise cosine similarity
+7. whether LAS-derived `.npy` inputs preserve the desired coordinate/RGB conventions for Uni3D sanity checks
 
 These uncertainties should not be hidden.
 They should be tracked and resolved one by one.
@@ -193,9 +248,12 @@ The current immediate next actions are:
    - checkpoint loading
    - inference path
    - output tensor for global embedding
-6. implement a standalone Uni3D feature extractor
-7. run minimal sanity checks
-8. only then decide how to use the features downstream
+6. preserve the standalone Uni3D feature extractor boundary
+7. convert a small set of server `.las` single-tree files to Uni3D `.npy` inputs
+8. run the small-batch Uni3D embedding extraction script on the GPU server
+9. run pairwise cosine similarity analysis on the saved embeddings
+10. inspect whether real embeddings are finite, repeatable, and not all nearly identical
+11. only then decide how to use the features downstream
 
 ---
 
@@ -412,7 +470,8 @@ If a future agent needs a short summary, use this:
 - ForestAgent is a single-tree point cloud research prototype.
 - q1/q2/q3 baseline v1.1 is frozen.
 - single-tree MVP v1 is connected to a local Ollama verbalizer.
-- The current system is still pre-Uni3D / pre-learned-feature.
+- The Uni3D extractor has passed a real GPU forward sanity check on the lab server.
+- The current main QA system is still not using Uni3D features by default.
 - q1/q2/q3 remain the currently stable core tasks.
 - The next main step is a Uni3D extractor / feature branch, not q4/q5 expansion.
 - Uni3D should first be used only for global feature extraction + cache + sanity checks.
