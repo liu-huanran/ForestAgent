@@ -16,7 +16,10 @@ import numpy as np
 
 from scripts.convert_las_to_uni3d_npy import (
     build_uni3d_input_array,
+    convert_las_file,
+    discover_las_paths,
     normalize_rgb,
+    normalize_limit,
     sample_fixed_count,
     write_manifest_jsonl,
 )
@@ -29,15 +32,75 @@ class ConvertLasToUni3DNpyTests(unittest.TestCase):
         first = sample_fixed_count(array, num_points=5, seed=42)
         second = sample_fixed_count(array, num_points=5, seed=42)
 
-        self.assertEqual(first.shape, (5, 3))
-        self.assertTrue(np.array_equal(first, second))
-        self.assertEqual(first.dtype, np.float32)
+        self.assertEqual(first.values.shape, (5, 3))
+        self.assertTrue(np.array_equal(first.values, second.values))
+        self.assertEqual(first.values.dtype, np.float32)
+        self.assertEqual(first.method, "deterministic_random_without_replacement")
 
     def test_sample_fixed_count_rejects_too_few_points(self) -> None:
         array = np.zeros((4, 3), dtype=np.float32)
 
         with self.assertRaisesRegex(ValueError, "too_few_points"):
             sample_fixed_count(array, num_points=5, seed=42)
+
+    def test_limit_none_or_zero_means_all_candidates_and_recursive_finds_subdirs(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            nested = root / "nested"
+            nested.mkdir()
+            (root / "a.las").write_bytes(b"fake")
+            (nested / "b.las").write_bytes(b"fake")
+
+            all_paths = discover_las_paths(
+                input_dir=root,
+                pattern="*.las",
+                recursive=True,
+                limit=normalize_limit(None),
+            )
+            zero_paths = discover_las_paths(
+                input_dir=root,
+                pattern="*.las",
+                recursive=True,
+                limit=normalize_limit(0),
+            )
+            top_level_only = discover_las_paths(
+                input_dir=root,
+                pattern="*.las",
+                recursive=False,
+                limit=normalize_limit(None),
+            )
+
+            self.assertEqual(len(all_paths), 2)
+            self.assertEqual(len(zero_paths), 2)
+            self.assertEqual(len(top_level_only), 1)
+
+    def test_convert_las_file_skip_existing_does_not_overwrite(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            input_dir = root / "las"
+            output_dir = root / "npy"
+            input_dir.mkdir()
+            output_dir.mkdir()
+            source_las = input_dir / "tree_001.las"
+            output_npy = output_dir / "tree_001.npy"
+            source_las.write_bytes(b"not read during skip")
+            existing = np.ones((5, 3), dtype=np.float32)
+            np.save(output_npy, existing)
+
+            entry = convert_las_file(
+                source_las=source_las,
+                input_dir=input_dir,
+                output_dir=output_dir,
+                num_points=5,
+                seed=42,
+                include_rgb=False,
+                overwrite=False,
+                skip_existing=True,
+            )
+
+            self.assertEqual(entry["status"], "skipped_existing")
+            self.assertEqual(entry["output_shape"], [5, 3])
+            self.assertTrue(np.array_equal(np.load(output_npy), existing))
 
     def test_normalize_rgb_uint16_to_unit_range(self) -> None:
         rgb = np.asarray([[0, 32768, 65535]], dtype=np.uint16)

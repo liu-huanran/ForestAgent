@@ -81,9 +81,18 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         action="store_true",
         help="Swap y/z columns after loading xyz. Use only when the dataset convention requires it.",
     )
-    parser.add_argument("--limit", type=int, default=10, help="Maximum number of files to process.")
+    parser.add_argument("--recursive", dest="recursive", action="store_true", default=True)
+    parser.add_argument("--no-recursive", dest="recursive", action="store_false")
+    parser.add_argument("--limit", type=int, default=None, help="Maximum number of files to process. 0 means all.")
     parser.add_argument("--pattern", default="*.npy", help="Glob pattern used with --input-dir.")
     parser.add_argument("--overwrite", action="store_true", help="Overwrite existing per-tree output files.")
+    parser.add_argument(
+        "--skip-existing",
+        "--resume",
+        dest="skip_existing",
+        action="store_true",
+        help="Skip existing .npz outputs and record them as skipped_existing.",
+    )
     return parser.parse_args(argv)
 
 
@@ -94,7 +103,8 @@ def main(argv: list[str] | None = None) -> int:
             input_dir=Path(args.input_dir) if args.input_dir else None,
             manifest_path=Path(args.manifest_path) if args.manifest_path else None,
             pattern=args.pattern,
-            limit=args.limit,
+            recursive=args.recursive,
+            limit=normalize_limit(args.limit),
         )
     except ValueError as exc:
         print(f"ERROR: {exc}", file=sys.stderr)
@@ -107,6 +117,7 @@ def main(argv: list[str] | None = None) -> int:
     extractor = Uni3DFeatureExtractor(config)
     results: list[dict[str, Any]] = []
 
+    total = len(input_paths)
     for index, source_path in enumerate(input_paths, start=1):
         tree_id = infer_tree_id(source_path)
         output_path = output_dir / f"{index:03d}_{safe_filename(tree_id)}.npz"
@@ -116,13 +127,36 @@ def main(argv: list[str] | None = None) -> int:
             "output_path": str(output_path),
         }
         if output_path.exists() and not args.overwrite:
+            if args.skip_existing:
+                try:
+                    existing = load_existing_embedding_metadata(output_path)
+                    results.append(
+                        {
+                            **entry_base,
+                            **existing,
+                            "status": "skipped_existing",
+                            "failure_reason": None,
+                        }
+                    )
+                    print(f"[{index}/{total}] {tree_id} skipped_existing")
+                except ValueError as exc:
+                    results.append(
+                        {
+                            **entry_base,
+                            "status": "failed",
+                            "failure_reason": f"ValueError: {exc}",
+                        }
+                    )
+                    print(f"[{index}/{total}] {tree_id} failed: {exc}", file=sys.stderr)
+                continue
             results.append(
                 {
                     **entry_base,
                     "status": "failed",
-                    "failure_reason": "output_exists_use_overwrite",
+                    "failure_reason": "output_exists_use_overwrite_or_skip_existing",
                 }
             )
+            print(f"[{index}/{total}] {tree_id} failed: output exists", file=sys.stderr)
             continue
 
         try:
@@ -163,6 +197,7 @@ def main(argv: list[str] | None = None) -> int:
                     "metadata": make_jsonable(metadata),
                 }
             )
+            print(f"[{index}/{total}] {tree_id} ok")
         except (
             ValueError,
             FileNotFoundError,
@@ -178,14 +213,14 @@ def main(argv: list[str] | None = None) -> int:
                     "failure_reason": f"{type(exc).__name__}: {exc}",
                 }
             )
-            print(f"FAILED {source_path}: {type(exc).__name__}: {exc}", file=sys.stderr)
+            print(f"[{index}/{total}] {tree_id} failed: {type(exc).__name__}: {exc}", file=sys.stderr)
 
     summary = build_summary(args=args, config=config, input_paths=input_paths, results=results)
     summary_path = output_dir / "summary.json"
     summary_path.write_text(json.dumps(summary, indent=2, sort_keys=True), encoding="utf-8")
 
     print_batch_summary(summary_path=summary_path, summary=summary)
-    return 0 if summary["success_count"] > 0 and summary["failure_count"] == 0 else 2
+    return 0 if summary["candidate_count"] > 0 and summary["failure_count"] == 0 else 2
 
 
 def build_extractor_config(args: argparse.Namespace) -> Uni3DExtractorConfig:
@@ -215,10 +250,9 @@ def discover_input_paths(
     input_dir: Path | None,
     manifest_path: Path | None,
     pattern: str,
-    limit: int,
+    recursive: bool,
+    limit: int | None,
 ) -> list[Path]:
-    if limit <= 0:
-        raise ValueError("--limit must be positive.")
     if manifest_path is not None:
         paths = read_manifest_paths(manifest_path=manifest_path, input_dir=input_dir)
     else:
@@ -226,8 +260,17 @@ def discover_input_paths(
             raise ValueError("--input-dir is required when --manifest-path is not provided.")
         if not input_dir.is_dir():
             raise ValueError(f"input directory not found: {input_dir}")
-        paths = sorted(path for path in input_dir.rglob(pattern) if path.is_file())
-    return paths[:limit]
+        globber = input_dir.rglob if recursive else input_dir.glob
+        paths = sorted(path for path in globber(pattern) if path.is_file())
+    return paths[:limit] if limit is not None else paths
+
+
+def normalize_limit(limit: int | None) -> int | None:
+    if limit is None or limit == 0:
+        return None
+    if limit < 0:
+        raise ValueError("--limit must be non-negative. Use 0 or omit it for all candidates.")
+    return limit
 
 
 def read_manifest_paths(*, manifest_path: Path, input_dir: Path | None) -> list[Path]:
@@ -250,7 +293,9 @@ def read_manifest_paths(*, manifest_path: Path, input_dir: Path | None) -> list[
         with manifest_path.open("r", encoding="utf-8", newline="") as handle:
             reader = csv.DictReader(handle)
             for row in reader:
-                raw_paths.append(row.get("path") or row.get("source_path") or next(iter(row.values())))
+                raw_paths.append(
+                    row.get("path") or row.get("source_path") or row.get("output_npy") or next(iter(row.values()))
+                )
     else:
         raw_paths = [
             line.strip()
@@ -264,7 +309,7 @@ def _extract_manifest_path(item: Any) -> str:
     if isinstance(item, str):
         return item
     if isinstance(item, dict):
-        value = item.get("path") or item.get("source_path")
+        value = item.get("path") or item.get("source_path") or item.get("output_npy")
         if isinstance(value, str):
             return value
     raise ValueError("Manifest entries must be strings or objects with path/source_path.")
@@ -327,6 +372,28 @@ def save_embedding_npz(
     )
 
 
+def load_existing_embedding_metadata(output_path: Path) -> dict[str, Any]:
+    try:
+        with np.load(output_path, allow_pickle=False) as payload:
+            if "embedding_raw" not in payload or "embedding_l2" not in payload:
+                raise ValueError("existing output missing embedding_raw or embedding_l2")
+            raw = np.asarray(payload["embedding_raw"], dtype=np.float32)
+            l2 = np.asarray(payload["embedding_l2"], dtype=np.float32)
+    except Exception as exc:
+        raise ValueError(f"could not read existing embedding output: {exc}") from exc
+    if raw.ndim == 0 or l2.ndim == 0:
+        raise ValueError("existing embedding arrays must not be scalar")
+    return {
+        "embedding_raw_shape": tuple(int(v) for v in raw.shape),
+        "embedding_l2_shape": tuple(int(v) for v in l2.shape),
+        "embedding_raw_finite": bool(np.isfinite(raw).all()),
+        "embedding_l2_finite": bool(np.isfinite(l2).all()),
+        "embedding_raw_l2_norm": np.linalg.norm(raw, axis=-1).astype(float).tolist(),
+        "embedding_l2_l2_norm": np.linalg.norm(l2, axis=-1).astype(float).tolist(),
+        "metadata": {"skipped_existing": True},
+    }
+
+
 def build_summary(
     *,
     args: argparse.Namespace,
@@ -335,16 +402,19 @@ def build_summary(
     results: list[dict[str, Any]],
 ) -> dict[str, Any]:
     success_count = sum(1 for result in results if result.get("status") == "ok")
-    failure_count = sum(1 for result in results if result.get("status") != "ok")
+    skipped_count = sum(1 for result in results if result.get("status") == "skipped_existing")
+    failure_count = sum(1 for result in results if result.get("status") == "failed")
     return {
         "script": "scripts/batch_extract_uni3d_embeddings.py",
         "mock": False,
         "input_dir": args.input_dir,
         "manifest_path": args.manifest_path,
         "pattern": args.pattern,
+        "recursive": args.recursive,
         "limit": args.limit,
         "candidate_count": len(input_paths),
         "success_count": success_count,
+        "skipped_count": skipped_count,
         "failure_count": failure_count,
         "config": make_jsonable(config.__dict__),
         "results": make_jsonable(results),
@@ -355,6 +425,7 @@ def print_batch_summary(*, summary_path: Path, summary: dict[str, Any]) -> None:
     print(f"summary_path: {summary_path}")
     print(f"candidate_count: {summary['candidate_count']}")
     print(f"success_count: {summary['success_count']}")
+    print(f"skipped_count: {summary['skipped_count']}")
     print(f"failure_count: {summary['failure_count']}")
     for result in summary["results"]:
         status = result.get("status")
@@ -362,6 +433,11 @@ def print_batch_summary(*, summary_path: Path, summary: dict[str, Any]) -> None:
         if status == "ok":
             print(
                 f"OK {tree_id}: embedding_l2_shape={result.get('embedding_l2_shape')} "
+                f"l2_norm={result.get('embedding_l2_l2_norm')}"
+            )
+        elif status == "skipped_existing":
+            print(
+                f"SKIP {tree_id}: embedding_l2_shape={result.get('embedding_l2_shape')} "
                 f"l2_norm={result.get('embedding_l2_l2_norm')}"
             )
         else:

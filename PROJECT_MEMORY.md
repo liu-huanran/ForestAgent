@@ -216,6 +216,30 @@ Boundary:
 - embedding cosine similarity over real Uni3D outputs is not yet verified
 - this tooling remains independent of the main QA system and q1 / q2 / q3 geometry baseline
 
+### 4.7 Uni3D full TLS processing readiness
+
+As of 2026-04-26, the Uni3D offline tooling has been strengthened for safe full TLS runs:
+
+- LAS conversion supports recursive scanning, full-run `--limit 0`, `--skip-existing` / `--resume`, `manifest.jsonl`, and `summary.json`
+- batch embedding extraction supports recursive scanning, full-run `--limit 0`, `--skip-existing` / `--resume`, per-sample progress, and failure continuation
+- similarity analysis supports `--max-samples`, `--seed`, `--no-full-matrix`, and `--save-full-matrix`
+- `docs/uni3d_full_tls_embedding_run.md` records the recommended full TLS server workflow
+
+User-reported server result before this readiness step:
+
+- 10-tree real GPU sanity check passed
+- `success_count=10`
+- `failure_count=0`
+- `embedding_dim=1024`
+- `invalid_count=0`
+- pairwise cosine similarity min / mean / max = `0.6335 / 0.8661 / 0.9688`
+
+Boundary:
+
+- this is still engineering readiness, not a formal experiment conclusion
+- full TLS conversion and full TLS Uni3D forward still need to be run on the server
+- the main QA system, agent tools, and q1 / q2 / q3 geometry baseline remain unchanged
+
 ---
 
 ## 5. Known Uncertainties
@@ -229,6 +253,8 @@ The following are currently not fully settled:
 5. how the local Ollama verbalizer should be documented and bounded relative to structured outputs
 6. whether real Uni3D embeddings over 5-10 single-tree samples show useful separation in pairwise cosine similarity
 7. whether LAS-derived `.npy` inputs preserve the desired coordinate/RGB conventions for Uni3D sanity checks
+8. full TLS conversion success/failure rate and the distribution of point-count failures
+9. full TLS Uni3D embedding extraction success/failure rate and similarity distribution
 
 These uncertainties should not be hidden.
 They should be tracked and resolved one by one.
@@ -249,11 +275,12 @@ The current immediate next actions are:
    - inference path
    - output tensor for global embedding
 6. preserve the standalone Uni3D feature extractor boundary
-7. convert a small set of server `.las` single-tree files to Uni3D `.npy` inputs
-8. run the small-batch Uni3D embedding extraction script on the GPU server
-9. run pairwise cosine similarity analysis on the saved embeddings
-10. inspect whether real embeddings are finite, repeatable, and not all nearly identical
-11. only then decide how to use the features downstream
+7. run full TLS `.las` to Uni3D `.npy` conversion on the server with `--skip-existing`
+8. inspect conversion `summary.json` and point-count failures
+9. run full TLS Uni3D embedding extraction on the GPU server with `--skip-existing`
+10. inspect extraction `summary.json`, finite checks, and L2 norms
+11. run sampled similarity analysis before deciding whether to save any full NxN matrix
+12. only then decide how to use the features downstream
 
 ---
 
