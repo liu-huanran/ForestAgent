@@ -234,9 +234,11 @@ class Uni3DFeatureExtractor:
             try:
                 import models.uni3d as uni3d_models  # type: ignore[import-not-found]
             except ModuleNotFoundError as exc:
+                missing_module = exc.name or "unknown"
                 raise Uni3DDependencyError(
                     "Could not import official Uni3D modules. Set uni3d_repo_path to a "
-                    "local checkout of baaivision/Uni3D and install its runtime dependencies."
+                    "local checkout of baaivision/Uni3D and install its runtime dependencies. "
+                    f"Missing module: {missing_module}."
                 ) from exc
 
         args = self._build_official_args()

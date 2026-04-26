@@ -455,7 +455,9 @@ This profile records the current target server environment for future Uni3D / fe
 - Conda version: 24.11.3
 - Current env: `base`
 - base Python: 3.12.2
-- Recommendation: do not use `base` for ForestAgent; create a separate Python 3.10 environment
+- ForestAgent / Uni3D server env: `fa-u`
+- Use: `conda activate fa-u`
+- Recommendation: do not use `base` for ForestAgent server work; use `fa-u`
 
 ### 9.6 Server workspace
 
@@ -470,6 +472,15 @@ This profile records the current target server environment for future Uni3D / fe
 - Use `CUDA_VISIBLE_DEVICES=1` when targeting GPU 1
 - Back up code, configs, logs, metrics, and best checkpoints
 - Avoid downloading everything from the server; pull only the artifacts needed for review or recovery
+
+### 9.7 Codex-server workflow
+
+- Codex and the server are not directly coupled initially
+- Use GitHub/Gitee as the bridge
+- Codex edits code and pushes commits / PRs
+- Server pulls code under `~/harrison_workspace/projects/ForestAgent`
+- Server runs GPU jobs with `conda activate fa-u`, `tmux`, and `CUDA_VISIBLE_DEVICES=1`
+- Do not let Codex modify shared server environments or run long GPU jobs without manual supervision
 
 ---
 
