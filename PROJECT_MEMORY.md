@@ -310,6 +310,30 @@ Boundary:
 - local review output has null `xyz/rgb` input statistics because the full server `.npy` input directory is not present in the local workspace
 - rerun on the server with the actual `uni3d_all_inputs_rgb` directory to fill raw input statistics
 
+### 4.10 Uni3D strict downstream probe tooling
+
+As of 2026-05-04, the repository includes strict offline downstream probe tooling for frozen Uni3D embeddings:
+
+- `scripts/probe_uni3d_embeddings_strict.py`
+- `docs/uni3d_downstream_probe.md`
+- `tests/test_uni3d_strict_probe.py`
+
+Confirmed by static/local tests:
+
+- the script reads existing `.npz` embeddings and `data/parameters.xlsx` / CSV labels only
+- it does not run Uni3D forward and does not train Uni3D
+- it supports `random`, `stratified_random`, `group`, and `leave_one_site_out` splits
+- it supports `uni3d`, `geometry`, and `uni3d_plus_geometry` feature sets
+- regression probes exclude the target geometry column from geometry inputs to reduce label leakage
+- standardization is fit on train split only
+- near-duplicate, outlier, RGB source, and site filters are supported as offline confound checks
+
+Boundary:
+
+- this is downstream probe infrastructure, not a formal paper conclusion
+- results must be interpreted as frozen-feature probe behavior under the selected split
+- outputs under `outputs/` remain generated artifacts and should not be committed
+
 ---
 
 ## 5. Known Uncertainties
@@ -328,6 +352,8 @@ The following are currently not fully settled:
 10. whether near-duplicate pairs reflect true duplicate-like trees, acquisition overlap, or model over-smoothing
 11. whether `rgb_source=fallback_constant` groups should be analyzed separately from real RGB groups
 12. whether quantitative review input statistics confirm that near-duplicates/outliers are caused by raw point-cloud statistics, RGB availability, site effects, or embedding-space behavior
+13. whether strict downstream probe results remain strong under group / leave-one-site-out split
+14. whether Uni3D-only features add signal beyond geometry-only features without near-duplicate, site, or RGB leakage
 
 These uncertainties should not be hidden.
 They should be tracked and resolved one by one.
@@ -356,7 +382,9 @@ The current immediate next actions are:
 12. manually review top near-duplicate and outlier samples in the point clouds
 13. decide whether to split future analyses by RGB availability / plot / species
 14. rerun quantitative review on the server with the real full `.npy` input directory to fill xyz/rgb statistics
-15. only then decide how to use the features downstream
+15. run strict downstream probes over frozen Uni3D embeddings and `data/parameters.xlsx`
+16. compare random split against group / leave-one-site-out before claiming downstream usefulness
+17. only then decide how to use the features downstream
 
 ---
 
