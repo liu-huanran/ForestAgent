@@ -122,6 +122,22 @@ At this stage, Uni3D should be treated as:
 
 The target is to first obtain a stable, reusable global embedding pipeline.
 
+### 3.4 Current paper / research positioning
+
+The project should not be framed merely as a system prototype.
+
+The intended research framing is:
+
+**a geometry-grounded and Uni3D-representation-assisted framework for reliable single-tree point cloud question answering.**
+
+This means future writing should emphasize:
+
+- geometry-based tools as the grounded source of physical facts
+- Uni3D embeddings as a learned representation layer that assists retrieval, diagnosis, or controlled downstream analysis
+- reliability and hallucination reduction as the central motivation
+- single-tree point cloud question answering as the target task setting
+- a controlled framework rather than an open-ended agent or unconstrained LLM system
+
 ---
 
 ## 4. Stage 2 Plan: Uni3D
@@ -240,6 +256,60 @@ Boundary:
 - full TLS conversion and full TLS Uni3D forward still need to be run on the server
 - the main QA system, agent tools, and q1 / q2 / q3 geometry baseline remain unchanged
 
+### 4.8 Uni3D full TLS first embedding analysis
+
+As of 2026-04-26, the full TLS Uni3D embedding set has been analyzed offline in a first-pass data health check.
+
+User-reported full TLS similarity result:
+
+- `loaded_embeddings=430`
+- `analyzed_embeddings=430`
+- `invalid_embeddings=0`
+- `embedding_dim=1024`
+- pairwise cosine similarity min / mean / max = `0.0939965 / 0.5662398 / 0.9999282`
+
+Local analysis artifacts:
+
+- `outputs/all_tls_001_embedding_analysis_round1/`
+- `scripts/analyze_uni3d_embedding_dataset.py`
+- `scripts/query_uni3d_embedding_neighbors.py`
+
+Confirmed locally:
+
+- saved embedding format is `.npz` with `embedding_raw`, `embedding_l2`, `tree_id`, `source_path`, and `metadata`
+- `data/parameters.xlsx` covers all 430 embedding IDs
+- first-pass PCA, near-duplicate, outlier, nearest-neighbor, and lightweight label-probe outputs were generated
+
+Boundary:
+
+- this is data/feature health analysis only
+- it does not integrate Uni3D into the main QA system
+- it does not modify q1 / q2 / q3 baseline behavior
+- lightweight probes are not formal experiment results
+
+### 4.9 Uni3D quantitative review table
+
+As of 2026-05-04, the repository includes an offline quantitative review script for existing Uni3D embedding artifacts:
+
+- `scripts/review_uni3d_embedding_quantitative.py`
+- `tests/test_uni3d_embedding_review.py`
+
+The script reads existing extraction summaries, similarity summaries, nearest-neighbor outputs, near-duplicate candidates, outlier candidates, and converted `.npy` inputs when available.
+
+Generated local review artifacts:
+
+- `outputs/all_tls_001_embedding_quant_review_round1/review_table.csv`
+- `outputs/all_tls_001_embedding_quant_review_round1/review_table.json`
+- `outputs/all_tls_001_embedding_quant_review_round1/review_summary.json`
+
+Boundary:
+
+- the script does not run Uni3D forward
+- the script does not modify existing embeddings
+- the script does not integrate with the main QA system
+- local review output has null `xyz/rgb` input statistics because the full server `.npy` input directory is not present in the local workspace
+- rerun on the server with the actual `uni3d_all_inputs_rgb` directory to fill raw input statistics
+
 ---
 
 ## 5. Known Uncertainties
@@ -255,6 +325,9 @@ The following are currently not fully settled:
 7. whether LAS-derived `.npy` inputs preserve the desired coordinate/RGB conventions for Uni3D sanity checks
 8. full TLS conversion success/failure rate and the distribution of point-count failures
 9. full TLS Uni3D embedding extraction success/failure rate and similarity distribution
+10. whether near-duplicate pairs reflect true duplicate-like trees, acquisition overlap, or model over-smoothing
+11. whether `rgb_source=fallback_constant` groups should be analyzed separately from real RGB groups
+12. whether quantitative review input statistics confirm that near-duplicates/outliers are caused by raw point-cloud statistics, RGB availability, site effects, or embedding-space behavior
 
 These uncertainties should not be hidden.
 They should be tracked and resolved one by one.
@@ -280,7 +353,10 @@ The current immediate next actions are:
 9. run full TLS Uni3D embedding extraction on the GPU server with `--skip-existing`
 10. inspect extraction `summary.json`, finite checks, and L2 norms
 11. run sampled similarity analysis before deciding whether to save any full NxN matrix
-12. only then decide how to use the features downstream
+12. manually review top near-duplicate and outlier samples in the point clouds
+13. decide whether to split future analyses by RGB availability / plot / species
+14. rerun quantitative review on the server with the real full `.npy` input directory to fill xyz/rgb statistics
+15. only then decide how to use the features downstream
 
 ---
 
