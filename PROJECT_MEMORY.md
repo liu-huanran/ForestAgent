@@ -334,6 +334,25 @@ Boundary:
 - results must be interpreted as frozen-feature probe behavior under the selected split
 - outputs under `outputs/` remain generated artifacts and should not be committed
 
+### 4.11 Uni3D color ablation input preparation
+
+As of 2026-05-05, the LAS-to-NPY conversion script supports clean Uni3D input ablations:
+
+- `xyz_only`: all successful samples are written as `[10000, 3]` xyz-only arrays
+- `color_all`: all successful samples are written as `[10000, 6]` xyz + color arrays
+- supported color policies include `drop`, `constant_all`, `las_rgb_if_available_else_constant`, `existing_semantic_if_available_else_constant`, `site_palette`, and `species_palette`
+- `docs/uni3d_color_ablation.md` documents the intended usage and leakage risks
+- tests cover xyz-only output, color-all constant output, color range validation, skip-existing behavior, too-few-points failure recording, and manifest fields
+
+Important boundary:
+
+- this only prepares future input directories such as `data/uni3d_all_inputs_xyz_only_v1` and `data/uni3d_all_inputs_color_all_v1`
+- it does not rerun Uni3D forward
+- it does not overwrite historical mixed inputs `data/uni3d_all_inputs_rgb`
+- it does not overwrite historical mixed embeddings `outputs/all_tls_001`
+- `species_palette` is label leakage and must not be used for formal species classification probes
+- current semantic/discrete colors must not be described as natural RGB unless the original LAS fields are independently verified
+
 ---
 
 ## 5. Known Uncertainties
@@ -354,6 +373,7 @@ The following are currently not fully settled:
 12. whether quantitative review input statistics confirm that near-duplicates/outliers are caused by raw point-cloud statistics, RGB availability, site effects, or embedding-space behavior
 13. whether strict downstream probe results remain strong under group / leave-one-site-out split
 14. whether Uni3D-only features add signal beyond geometry-only features without near-duplicate, site, or RGB leakage
+15. whether clean `xyz_only_all` and `color_all` ablation embeddings reproduce, reduce, or clarify the mixed-input probe behavior
 
 These uncertainties should not be hidden.
 They should be tracked and resolved one by one.
@@ -384,7 +404,9 @@ The current immediate next actions are:
 14. rerun quantitative review on the server with the real full `.npy` input directory to fill xyz/rgb statistics
 15. run strict downstream probes over frozen Uni3D embeddings and `data/parameters.xlsx`
 16. compare random split against group / leave-one-site-out before claiming downstream usefulness
-17. only then decide how to use the features downstream
+17. generate clean `xyz_only_all` and `color_all` Uni3D input directories without overwriting mixed historical artifacts
+18. rerun embedding extraction and strict probes separately for the two ablation versions
+19. only then decide how to use the features downstream
 
 ---
 
