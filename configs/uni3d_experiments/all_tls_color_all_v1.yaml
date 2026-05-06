@@ -1,0 +1,71 @@
+experiment:
+  name: all_tls_color_all_v1
+  description: "All TLS single-tree point clouds, color-all Uni3D channel ablation with explicit color policy."
+  stage: "planned"
+  version: "v1"
+  created_by: "codex"
+  notes: "Default color_policy is constant_all to avoid natural-RGB or semantic-color claims."
+
+paths:
+  raw_las_dir: "/home/team-lu/harrison_workspace/data/forestagent/tls_las"
+  npy_input_dir: "/home/team-lu/harrison_workspace/data/forestagent/uni3d_all_inputs_color_all_v1"
+  embedding_output_dir: "/home/team-lu/harrison_workspace/outputs/forestagent/uni3d_embeddings/all_tls_color_all_v1"
+  similarity_output_dir: "/home/team-lu/harrison_workspace/outputs/forestagent/uni3d_embeddings/all_tls_color_all_v1_analysis"
+  probe_output_dir: "/home/team-lu/harrison_workspace/outputs/forestagent/probe_strict/all_tls_color_all_v1"
+  label_path: "data/parameters.xlsx"
+  checkpoint_path: "/home/team-lu/harrison_workspace/checkpoints/Uni3D/modelzoo/uni3d-b/model.pt"
+  uni3d_repo_path: "/home/team-lu/harrison_workspace/projects/Uni3D"
+
+conversion:
+  enabled: true
+  output_mode: "color_all"
+  color_policy: "constant_all"
+  constant_color: [0.4, 0.4, 0.4]
+  num_points: 10000
+  seed: 42
+  recursive: true
+  pattern: "*.las"
+  skip_existing: true
+  overwrite: false
+  semantic_color_likely: false
+  natural_rgb: false
+  limit: null
+
+extractor:
+  pc_model: "eva02_base_patch14_448"
+  pc_feat_dim: 768
+  embed_dim: 1024
+  pc_encoder_dim: 512
+  num_group: 512
+  group_size: 64
+  device: "cuda"
+  yz_swap: false
+  pattern: "*.npy"
+  recursive: true
+  skip_existing: true
+  overwrite: false
+  limit: null
+
+analysis:
+  similarity:
+    top_k: 5
+    max_samples: null
+    seed: 42
+    save_full_matrix: true
+    no_full_matrix: false
+  probe:
+    tasks: ["all"]
+    feature_sets: ["all"]
+    splits: ["random", "leave_one_site_out"]
+    seeds: [0, 1, 2, 3, 4]
+    exclude_near_duplicates: false
+    exclude_outliers: false
+    rgb_source: "all"
+
+metadata:
+  expected_sample_count: 430
+  current_status: "planned"
+  mixed_rgb_availability: false
+  interpretability_warning: false
+  warning: "constant_all does not provide natural RGB or semantic information; it is a channel-count/control ablation."
+

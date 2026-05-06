@@ -70,6 +70,26 @@ Baseline v1.1 should currently be treated as:
 - pre-Uni3D / pre-learned-feature
 - paired with a controlled local verbalization layer in single-tree MVP v1
 
+### 1.5 ForestAgent v2 controlled tool-calling skeleton
+
+As of 2026-05-06, ForestAgent v2 Phase 1+2 has a verified mock-only skeleton:
+
+- tool schema / registry / result contracts exist for controlled tool discovery
+- q1 / q2 / q3 / tree_report_q123 are registered as v2 metadata
+- Uni3D / retrieval / audit tools are registered only as offline unavailable stubs by default
+- deterministic planner routes q1 / q2 / q3 / q123 report questions without LLM reasoning
+- mock executor converts tool results into Evidence Packet items
+- response builder produces structured_summary and report_text only from evidence
+- trace records can be serialized to JSON
+- v2 pipeline runs a mock closed loop without replacing the old CLI or MVP path
+
+Boundary:
+
+- v2 Phase 1+2 does not call real q1 / q2 / q3 adapters yet
+- v2 Phase 1+2 does not run Uni3D forward or read embedding caches
+- v2 Phase 1+2 does not introduce LLM planning or free-form reasoning
+- q1 / q2 / q3 baseline algorithms and the old MVP entrypoint remain unchanged
+
 ---
 
 ## 2. What Baseline v1.1 Means
@@ -353,6 +373,88 @@ Important boundary:
 - `species_palette` is label leakage and must not be used for formal species classification probes
 - current semantic/discrete colors must not be described as natural RGB unless the original LAS fields are independently verified
 
+### 4.12 Uni3D color ablation server results
+
+As of 2026-05-05, server-generated Uni3D color ablation artifacts have been reviewed locally.
+
+Reviewed artifact directories:
+
+- `outputs/all_tls_xyz_only_v1`
+- `outputs/all_tls_xyz_only_v1_analysis`
+- `outputs/all_tls_xyz_only_v1_loso`
+- `outputs/all_tls_color_all_semantic_v1`
+- `outputs/all_tls_color_all_semantic_v1_analysis`
+- `outputs/all_tls_color_all_semantic_v1_loso`
+- historical mixed reference: `outputs/all_tls_001`, `outputs/all_tls_001_analysis_full`, `outputs/probe_strict/loso_round1`
+
+Confirmed:
+
+- `xyz_only_v1` real Uni3D embedding extraction succeeded for `430/430` samples with `failure_count=0`
+- `xyz_only_v1` inputs were all `[10000, 3]`; metadata records `rgb_source=fallback_constant` for all 430 samples
+- `color_all_semantic_v1` real Uni3D embedding extraction succeeded for `430/430` samples with `failure_count=0`
+- `color_all_semantic_v1` inputs were all `[10000, 6]`; metadata records `rgb_source=provided` for all 430 samples
+- both ablation versions produced finite `1024`-dimensional embeddings with `invalid_count=0`
+- neither ablation version shows whole-embedding collapse in pairwise cosine similarity
+
+Important comparison:
+
+- `color_all_semantic_v1` embeddings are exactly identical to the historical mixed embeddings in `outputs/all_tls_001` for all 430 samples (`embedding_raw` and `embedding_l2` max absolute diff = `0`)
+- this means the historical mixed run was effectively equivalent to the explicit semantic-color-all run, because `[N,3]` mixed samples received the same fallback color inside the adapter
+- `xyz_only_v1` differs from mixed/semantic only for the 151 samples that previously had semantic/discrete color columns; the other 279 samples are exactly identical
+
+Similarity summary:
+
+- historical mixed: cosine min / mean / max / std = `0.093997 / 0.566240 / 0.999928 / 0.192763`
+- `xyz_only_v1`: cosine min / mean / max / std = `0.093997 / 0.569716 / 0.999840 / 0.194858`
+- `color_all_semantic_v1`: same as historical mixed
+- near-duplicates remain present after xyz-only conversion, especially site 155 pairs
+
+Strict leave-one-site-out probe summary:
+
+- `xyz_only_v1` Uni3D-only species accuracy = about `0.0716`
+- `color_all_semantic_v1` Uni3D-only species accuracy = about `0.1102`, identical to historical mixed
+- Uni3D-only regression R2 values remain strongly negative under leave-one-site-out for DBH, height, and crown width
+- geometry-only probe values are unchanged across these runs, as expected
+- `uni3d_plus_geometry` does not show stable improvement over geometry-only
+
+Boundary:
+
+- these are offline embedding/probe artifacts, not main-system integration
+- q1 / q2 / q3 baseline remains unchanged
+- these results do not show reliable cross-site downstream usefulness for Uni3D embeddings
+- semantic/discrete color should not be described as natural RGB
+- `color_all_semantic_v1` should not be treated as a new independent experimental condition relative to the historical mixed run, because it is numerically identical at the embedding level
+
+### 4.13 Uni3D offline experiment orchestration framework
+
+As of 2026-05-06, the repository includes an offline Uni3D experiment orchestration, audit, comparison, and report-generation framework.
+
+Added framework components:
+
+- example configs under `configs/uni3d_experiments/`
+- offline modules under `forestagent/experiments/`
+- command-plan CLI: `scripts/plan_uni3d_experiment.py`
+- read-only audit CLI: `scripts/audit_uni3d_experiment.py`
+- multi-experiment comparison CLI: `scripts/compare_uni3d_experiments.py`
+- Markdown report CLI: `scripts/generate_uni3d_experiment_report.py`
+- workflow documentation: `docs/uni3d_experiment_workflow.md`
+
+Confirmed boundary:
+
+- this framework generates commands and audits existing artifacts only
+- it does not run Uni3D forward by itself
+- it does not download checkpoints
+- it does not train Uni3D
+- it does not modify q1 / q2 / q3 baseline or the main QA path
+- it does not treat probe outputs as final paper conclusions
+
+Immediate intended use:
+
+- manage `all_tls_mixed_legacy_v1`, `all_tls_xyz_only_v1`, and `all_tls_color_all_v1` as explicit experiment versions
+- generate reproducible server command plans instead of manually reconstructing long CLI commands
+- audit conversion / extraction / similarity / probe outputs before interpreting results
+- compare mixed, xyz-only, and color-all variants with clear RGB/site/leakage warnings
+
 ---
 
 ## 5. Known Uncertainties
@@ -373,7 +475,12 @@ The following are currently not fully settled:
 12. whether quantitative review input statistics confirm that near-duplicates/outliers are caused by raw point-cloud statistics, RGB availability, site effects, or embedding-space behavior
 13. whether strict downstream probe results remain strong under group / leave-one-site-out split
 14. whether Uni3D-only features add signal beyond geometry-only features without near-duplicate, site, or RGB leakage
-15. whether clean `xyz_only_all` and `color_all` ablation embeddings reproduce, reduce, or clarify the mixed-input probe behavior
+15. whether a clean `constant_all` color ablation differs from `xyz_only_v1` and historical semantic-color behavior
+16. whether near-duplicate site 155 pairs reflect true duplicate-like trees, acquisition overlap, or geometry/model over-smoothing after removing semantic colors
+17. whether any useful Uni3D downstream signal remains under stricter experimental designs beyond leave-one-site-out
+18. whether the example experiment config paths need adjustment for the exact server artifact layout before the next full run
+19. how v2 should thin-wrap the real q1 / q2 / q3 baseline without changing the frozen algorithms
+20. which v2 offline evaluation cases should become the canonical routing / hallucination-prevention suite
 
 These uncertainties should not be hidden.
 They should be tracked and resolved one by one.
@@ -404,9 +511,15 @@ The current immediate next actions are:
 14. rerun quantitative review on the server with the real full `.npy` input directory to fill xyz/rgb statistics
 15. run strict downstream probes over frozen Uni3D embeddings and `data/parameters.xlsx`
 16. compare random split against group / leave-one-site-out before claiming downstream usefulness
-17. generate clean `xyz_only_all` and `color_all` Uni3D input directories without overwriting mixed historical artifacts
-18. rerun embedding extraction and strict probes separately for the two ablation versions
-19. only then decide how to use the features downstream
+17. preserve historical mixed, `xyz_only_v1`, and `color_all_semantic_v1` artifacts without overwriting them
+18. optionally run a clean `color_all + constant_all` ablation if the goal is to isolate channel-count effects without semantic color
+19. manually review remaining near-duplicate candidates, especially site 155
+20. do not integrate Uni3D embeddings into q1 / q2 / q3 or the main QA system based on the current strict probe results
+21. use the Uni3D experiment framework to generate plans, audit outputs, and compare mixed / xyz-only / color-all variants before further claims
+22. only then decide how to use the features downstream
+23. keep v2 Phase 1+2 mock skeleton separate from the old CLI until real adapters are deliberately reviewed
+24. add v2 design documentation and a small demo in a later phase
+25. decide whether Phase 3 should first add thin q1 / q2 / q3 adapters or expand offline evaluation coverage
 
 ---
 
