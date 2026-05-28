@@ -70,25 +70,26 @@ Baseline v1.1 should currently be treated as:
 - pre-Uni3D / pre-learned-feature
 - paired with a controlled local verbalization layer in single-tree MVP v1
 
-### 1.5 ForestAgent v2 controlled tool-calling skeleton
+### 1.5 ForestAgent v2 mock skeleton archived outside the mainline
 
-As of 2026-05-06, ForestAgent v2 Phase 1+2 has a verified mock-only skeleton:
+As of 2026-05-07, the previous ForestAgent v2 mock-only skeleton has been
+isolated under `experimental/forestagent_v2_mock/`.
 
-- tool schema / registry / result contracts exist for controlled tool discovery
-- q1 / q2 / q3 / tree_report_q123 are registered as v2 metadata
-- Uni3D / retrieval / audit tools are registered only as offline unavailable stubs by default
-- deterministic planner routes q1 / q2 / q3 / q123 report questions without LLM reasoning
-- mock executor converts tool results into Evidence Packet items
-- response builder produces structured_summary and report_text only from evidence
-- trace records can be serialized to JSON
-- v2 pipeline runs a mock closed loop without replacing the old CLI or MVP path
+Confirmed:
+
+- the old MVP CLI and `analyze-tree` path remain unchanged
+- q1 / q2 / q3 baseline algorithms remain unchanged
+- the v2 mock skeleton is not imported by the default CLI
+- the v2 mock skeleton is not part of the current paper mainline
+- the v2 mock skeleton overlaps with existing MVP routing, `json_summary`, and template `report_text`
+- the active Uni3D work remains offline experiment orchestration, embedding analysis, and ablation review
 
 Boundary:
 
-- v2 Phase 1+2 does not call real q1 / q2 / q3 adapters yet
-- v2 Phase 1+2 does not run Uni3D forward or read embedding caches
-- v2 Phase 1+2 does not introduce LLM planning or free-form reasoning
-- q1 / q2 / q3 baseline algorithms and the old MVP entrypoint remain unchanged
+- do not treat `experimental/forestagent_v2_mock/` as a runtime QA path
+- do not integrate Uni3D into the main question-answering chain by default
+- do not introduce LLM planning or free-form reasoning
+- future evidence-grounding improvements should first strengthen the existing MVP tests and structured outputs
 
 ---
 
@@ -479,8 +480,8 @@ The following are currently not fully settled:
 16. whether near-duplicate site 155 pairs reflect true duplicate-like trees, acquisition overlap, or geometry/model over-smoothing after removing semantic colors
 17. whether any useful Uni3D downstream signal remains under stricter experimental designs beyond leave-one-site-out
 18. whether the example experiment config paths need adjustment for the exact server artifact layout before the next full run
-19. how v2 should thin-wrap the real q1 / q2 / q3 baseline without changing the frozen algorithms
-20. which v2 offline evaluation cases should become the canonical routing / hallucination-prevention suite
+19. which evidence-grounding tests should be added directly to the existing MVP path
+20. whether the archived v2 mock skeleton should ever be revived after the current Uni3D ablation work is settled
 
 These uncertainties should not be hidden.
 They should be tracked and resolved one by one.
@@ -517,9 +518,9 @@ The current immediate next actions are:
 20. do not integrate Uni3D embeddings into q1 / q2 / q3 or the main QA system based on the current strict probe results
 21. use the Uni3D experiment framework to generate plans, audit outputs, and compare mixed / xyz-only / color-all variants before further claims
 22. only then decide how to use the features downstream
-23. keep v2 Phase 1+2 mock skeleton separate from the old CLI until real adapters are deliberately reviewed
-24. add v2 design documentation and a small demo in a later phase
-25. decide whether Phase 3 should first add thin q1 / q2 / q3 adapters or expand offline evaluation coverage
+23. keep `experimental/forestagent_v2_mock/` outside the formal runtime package
+24. add only small MVP evidence-grounding tests before considering any broader v2 design
+25. keep the next mainline work focused on Uni3D xyz-only / color-all ablation review and MVP evidence-grounding hardening
 
 ---
 

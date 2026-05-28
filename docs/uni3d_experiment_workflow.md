@@ -1,5 +1,16 @@
 # Uni3D 离线实验编排工作流
 
+## Mainline Boundary
+
+This document describes offline Uni3D experiment orchestration only.
+
+- Offline only: the tools plan commands, audit existing artifacts, compare experiment outputs, and generate local reports.
+- Not used by Baseline V0.
+- Not part of the runtime question-answering pipeline.
+- Does not run Uni3D forward by itself.
+- Does not train Uni3D, download checkpoints, or upload data.
+- Do not commit `data/`, `outputs/`, `checkpoints/`, `weights/`, `.npy`, or `.npz` artifacts.
+
 这份文档说明 ForestAgent 中新增的 Uni3D 离线实验管理层。它只负责实验配置、命令计划、结果审计、横向对比和 Markdown 记录，不是主问答系统的一部分。
 
 ## 1. 为什么需要这个框架
@@ -232,4 +243,3 @@ random split 可能让同一个 site 同时出现在 train/test。对于 TLS 单
 6. 比较 mixed / xyz-only / color-all。
 7. 生成 Markdown 实验记录和 PROJECT_MEMORY 候选片段。
 8. 只把已确认事实写进 `PROJECT_MEMORY.md`。
-
